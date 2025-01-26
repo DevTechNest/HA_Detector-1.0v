@@ -36,3 +36,7 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+/android
+/heart-attack-detector-a1965-firebase-adminsdk-f28kh-23d0ccd0e5.json
+/eas.json
