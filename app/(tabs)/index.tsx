@@ -9,7 +9,17 @@ export default function HomeScreen() {
   const [o2Level, setO2Level] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  //notification configurations
+  const { notification, expoPushToken} = useNotification();
+  const { currentlyRunning, isUpdateAvailable, isUpdatePending } =
+    Updates.useUpdates();
 
+  const [dummyState, setDummyState] = useState(0);
+
+  if (error) {
+    return <ThemedText>Error: {error.message}</ThemedText>;
+  }
   useEffect(() => {
     // Connect to the Socket.IO server
     const socket = io('https://ha-detector-backend-production.up.railway.app'); 
@@ -40,13 +50,13 @@ export default function HomeScreen() {
       socket.disconnect();
     };
   }, []);
-  //notiffication
-  const [expoPushToken, setExpoPushToken] = useState('');
-  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
-    undefined
-  );
-  const notificationListener = useRef<Notifications.EventSubscription>();
-  const responseListener = useRef<Notifications.EventSubscription>();
+  // //notiffication
+  // const [expoPushToken, setExpoPushToken] = useState('');
+  // const [notification, setNotification] = useState<Notifications.Notification | undefined>(
+  //   undefined
+  // );
+  // const notificationListener = useRef<Notifications.EventSubscription>();
+  // const responseListener = useRef<Notifications.EventSubscription>();
 
   useEffect(() => {
     registerForPushNotificationsAsync()
@@ -121,6 +131,7 @@ export default function HomeScreen() {
         <Text style={styles.footerItem}>History</Text>
       </View>
     </View>
+    
   );
 }
 

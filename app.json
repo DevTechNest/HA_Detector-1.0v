@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.rahuldivyanja.HA_Detector_1.x0v"
+      "package": "com.rahuldiv.lifeserver",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
