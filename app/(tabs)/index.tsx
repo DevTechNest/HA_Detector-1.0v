@@ -3,26 +3,35 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'rea
 import { io } from 'socket.io-client';
 import { registerForPushNotificationsAsync } from '@/lib/PushNotification';
 import * as Notifications from 'expo-notifications';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
+import { Circle } from 'react-native-svg';
+import moment from 'moment';
+import { removeValue, storeData } from '@/lib/Storage';
+// Get the current month
+var date = moment()
+  .utcOffset('+05:30')
+  .format('MMM DD');
+console.log(date);
+//Notification Handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
 
+  }),
+});
 export default function HomeScreen() {
-  const [pulseRate, setPulseRate] = useState<number | null>(null);
-  const [o2Level, setO2Level] = useState<number | null>(null);
+  const [showReport, setShowReport] = useState(false);
+  const [pulseRate, setPulseRate] = useState<number>(0);
+  const [o2Level, setO2Level] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  //notification configurations
-  const { notification, expoPushToken} = useNotification();
-  const { currentlyRunning, isUpdateAvailable, isUpdatePending } =
-    Updates.useUpdates();
 
-  const [dummyState, setDummyState] = useState(0);
-
-  if (error) {
-    return <ThemedText>Error: {error.message}</ThemedText>;
-  }
+  // https://ha-detector-backend-production.up.railway.app
   useEffect(() => {
     // Connect to the Socket.IO server
-    const socket = io('https://ha-detector-backend-production.up.railway.app'); 
+    const socket = io('http://192.168.8.164:3000');
 
     socket.on('connect', () => {
       console.log('Connected to the server');
@@ -31,7 +40,7 @@ export default function HomeScreen() {
 
     socket.on('data', (data) => {
       console.log('Data received:', data);
-      setPulseRate(data.pulseRate);
+      setPulseRate(data.pulseRate ? data.pulseRate : 0);
       setO2Level(data.oxygenLevel);
     });
 
@@ -50,26 +59,30 @@ export default function HomeScreen() {
       socket.disconnect();
     };
   }, []);
-  // //notiffication
-  // const [expoPushToken, setExpoPushToken] = useState('');
-  // const [notification, setNotification] = useState<Notifications.Notification | undefined>(
-  //   undefined
-  // );
-  // const notificationListener = useRef<Notifications.EventSubscription>();
-  // const responseListener = useRef<Notifications.EventSubscription>();
+
+
+
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
+    undefined
+  );
+  const notificationListener = useRef<Notifications.EventSubscription>();
+  const responseListener = useRef<Notifications.EventSubscription>();
 
   useEffect(() => {
     registerForPushNotificationsAsync()
       .then(token => setExpoPushToken(token ?? ''))
       .catch((error: any) => setExpoPushToken(`${error}`));
 
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+    notificationListener.current = Notifications.addNotificationReceivedListener(async (notification) => {
       setNotification(notification);
       console.log(notification)
+      await storeData(notification, "notification");
     });
 
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log(response);
+
     });
 
     return () => {
@@ -95,6 +108,17 @@ export default function HomeScreen() {
       </View>
     );
   }
+  fetch('http://192.168.8.164:3000/api/save-token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ expoPushToken }),
+  })
+    .then(response => response.json())
+    .then(data => console.log('Token saved successfully:', data))
+    .catch(error => console.error('Error saving token:', error));
+
 
   return (
     <View style={styles.container}>
@@ -105,33 +129,88 @@ export default function HomeScreen() {
         </Text>
       </View>
       <View style={styles.reportSection}>
+
         <View style={[styles.reportCard, styles.pulseCard]}>
           <Text style={styles.reportTitle}>Pulse Rate</Text>
-          <Text style={styles.reportValue}>
-            {pulseRate ? `${pulseRate} bpm` : 'N/A'}
-          
-          </Text>
+          <AnimatedCircularProgress
+            size={120}
+            width={8}
+            backgroundWidth={5}
+            fill={Number(pulseRate) || 0} // ✅ Convert to number
+            tintColor={((Number(pulseRate) >= 100) || (Number(pulseRate) <= 60)) ? "#a61919" : "#ffb7bc"}
+            backgroundColor={"#3d5875"}
+            arcSweepAngle={240}
+            rotation={240}
+            lineCap="round"
+          >
+            {
+              (fill) => (
+                <Text style={[styles.reportText, { color: ((Number(pulseRate) >= 100) || (Number(pulseRate) <= 60)) ? '#a61919' : '#000000' }]}>
+                  {pulseRate ? `${pulseRate} bpm` : 'N/A'}
+                </Text>
+              )
+            }
+          </AnimatedCircularProgress>
         </View>
         <View style={[styles.reportCard, styles.oxygenCard]}>
           <Text style={styles.reportTitle}>O₂ level</Text>
-          <Text style={styles.reportValue}>
-            {o2Level ? `${o2Level} SaO₂` : 'N/A'}
-          </Text>
+          <AnimatedCircularProgress
+            size={120}
+            width={8}
+            backgroundWidth={5}
+            fill={Number(o2Level) || 0} // ✅ Convert to number
+            tintColor={
+              (Number(o2Level) >= 95 && Number(o2Level) <= 100) ? "#50ff20" :
+                (Number(o2Level) >= 90 && Number(o2Level) < 95) ? "#ffa500" :
+                  (Number(o2Level) >= 85 && Number(o2Level) < 90) ? "#ff4500" :
+                    (Number(o2Level) < 85) ? "#a61919" :
+                      "#ffffff"
+            }
+            backgroundColor={"#3d5875"}
+            arcSweepAngle={240}
+            rotation={240}
+            lineCap="round"
+          >
+            {
+              (fill) => (
+                <Text style={[styles.reportText, {
+                  color: (Number(o2Level) >= 95) ? '#50ff20' :
+                    (Number(o2Level) >= 90 && Number(o2Level) < 95) ? '#ffa500' :
+                      (Number(o2Level) >= 85 && Number(o2Level) < 90) ? '#ff4500' :
+                        (Number(o2Level) < 85) ? '#a61919' :
+                          '#000000'
+                }]}>
+                  {o2Level ? `${o2Level} SaO₂` : 'N/A'}
+                </Text>
+              )
+            }
+          </AnimatedCircularProgress>
         </View>
       </View>
       <View style={styles.todayReport}>
-        <Text style={styles.dateText}>24 Tue</Text>
-        <TouchableOpacity style={styles.checkButton}>
+        <Text style={styles.dateText}>{date}</Text>
+        <TouchableOpacity
+          style={styles.checkButton}
+          onPress={() => setShowReport(prevState => !prevState)}
+
+        >
           <Text style={styles.checkButtonText}>Check Now</Text>
         </TouchableOpacity>
       </View>
+      {showReport && (
+        <View style={styles.todayReportPrint}>
+          <Text style={styles.printTitle}>{date} Report</Text>
+          <Text style={styles.printSub}>Pulse Rate: <Text style={{ fontWeight: 'bold' }}>{pulseRate || 'N/A'} bpm</Text></Text>
+          <Text style={styles.printSub}>O₂ level: <Text style={{ fontWeight: 'bold' }}>{o2Level || 'N/A'} SaO₂</Text> </Text>
+        </View>
+      )}
       <View style={styles.footer}>
-        <Text style={styles.footerItem}>Home</Text>
+        {/* <Text style={styles.footerItem}>Home</Text>
         <Text style={styles.footerItem}>Report</Text>
-        <Text style={styles.footerItem}>History</Text>
+        <Text style={styles.footerItem}>History</Text> */}
       </View>
     </View>
-    
+
   );
 }
 
@@ -139,7 +218,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ffffff',
   },
   center: {
     justifyContent: 'center',
@@ -201,10 +280,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   pulseCard: {
-    backgroundColor: '#FFEBEE',
+    backgroundColor: '#ffffff',
   },
   oxygenCard: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: '#ffffff',
+    alignSelf: 'center',
   },
   reportTitle: {
     fontSize: 14,
@@ -216,12 +296,27 @@ const styles = StyleSheet.create({
     color: '#000000',
     marginTop: 8,
   },
+  reportText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
   todayReport: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#E3F2FD',
     padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  todayReportPrint: {
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderWidth: 1,
     borderRadius: 12,
     marginBottom: 16,
   },
@@ -240,6 +335,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
     fontWeight: 'bold',
+  },
+  progressText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  printTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 8,
+  },
+  printSub: {
+    fontSize: 16,
+    color: '#000000',
+    marginBottom: 4,
   },
   footer: {
     flexDirection: 'row',

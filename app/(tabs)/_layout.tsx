@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import React from 'react';
 import { Platform, TouchableOpacity } from 'react-native';
 import { HapticTab } from '@/components/HapticTab';
@@ -7,19 +7,31 @@ import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-
+import AntDesign from '@expo/vector-icons/AntDesign';
+import Feather from '@expo/vector-icons/Feather';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: true,
-        headerTitleAlign: 'center',
-        headerTintColor: '#fff',
+        headerTitleAlign: 'left',
+        headerTintColor: '#000',
+        tabBarLabel: () => null,
         headerStyle: {
-          backgroundColor: '#434343'
+
+          backgroundColor: '#ffffff'
+        },
+        headerTitleStyle: {
+          padding: 10,
+          marginLeft: 15,
+          fontSize: 22,
+          fontWeight: 'bold'
         },
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
@@ -37,22 +49,35 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+
           headerRight: () => (
-            <TouchableOpacity onPress={() => alert('notifications')}>
-              <MaterialIcons name="notifications-active" size={24} color="#fff" style={{marginRight:20}} />
-            </TouchableOpacity>
+            <>
+
+              <TouchableOpacity onPress={() => router.push("../notification")}>
+                <MaterialIcons name="notifications-active" size={24} color="#000" style={{ marginRight: 20 }} />
+              </TouchableOpacity>
+              <FontAwesome name="user" size={24} color="black" style={{ marginRight: 30 }} />
+            </>
           ),
-          title: 'HA Detector',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />
+          title: 'Hello User',
+          tabBarIcon: ({ color }) => <FontAwesome5 name="home" size={24} color={color} />
         }}
       />
+      
       <Tabs.Screen
+
         name="explore"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          headerRight: () => (
+            <TouchableOpacity onPress={() => alert('Wait for redirecting to Customer Service...')}>
+              <AntDesign name="customerservice" size={24} color='#000957' style={{ marginRight: 30 }} />
+            </TouchableOpacity>
+          ),
+          title: 'Instructions',
+          tabBarIcon: ({ color }) => <AntDesign name="infocirlceo" size={24} color={color} />,
         }}
       />
+
 
     </Tabs>
   );
