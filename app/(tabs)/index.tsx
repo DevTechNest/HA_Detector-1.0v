@@ -28,10 +28,10 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // https://ha-detector-backend-production.up.railway.app
+  // http://192.168.8.164:3000
   useEffect(() => {
     // Connect to the Socket.IO server
-    const socket = io('http://192.168.8.164:3000');
+    const socket = io('https://ha-detector-backend-production.up.railway.app');
 
     socket.on('connect', () => {
       console.log('Connected to the server');
@@ -108,7 +108,7 @@ export default function HomeScreen() {
       </View>
     );
   }
-  fetch('http://192.168.8.164:3000/api/save-token', {
+  fetch('https://ha-detector-backend-production.up.railway.app/api/save-token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -136,12 +136,14 @@ export default function HomeScreen() {
             size={120}
             width={8}
             backgroundWidth={5}
-            fill={Number(pulseRate) || 0} // ✅ Convert to number
+            fill={Number(pulseRate) || 0} // 
             tintColor={((Number(pulseRate) >= 100) || (Number(pulseRate) <= 60)) ? "#a61919" : "#ffb7bc"}
             backgroundColor={"#3d5875"}
             arcSweepAngle={240}
             rotation={240}
             lineCap="round"
+            duration={2000}
+
           >
             {
               (fill) => (
@@ -170,6 +172,7 @@ export default function HomeScreen() {
             arcSweepAngle={240}
             rotation={240}
             lineCap="round"
+            duration={2000}
           >
             {
               (fill) => (
@@ -184,6 +187,7 @@ export default function HomeScreen() {
                 </Text>
               )
             }
+            
           </AnimatedCircularProgress>
         </View>
       </View>

@@ -18,8 +18,8 @@ export default function TabTwoScreen() {
         <Text style={styles.inforText}>2️⃣  Keep the Person Calm & Sitting Down</Text>
         <Text style={styles.inforText}>3️⃣  Give Aspirin (If Available & No Allergy)</Text>
         <Text style={styles.inforText}>4️⃣  If They Have Nitroglycerin, Use It</Text>
-        <Text style={styles.inforText}>5️⃣  Keep the Person Calm & Sitting Down</Text>
-        <Text style={styles.inforText}>6️⃣  Keep the Person Calm & Sitting Down</Text>
+        <Text style={styles.inforText}>5️⃣  Perform CPR if the Person Becomes Unconscious</Text>
+        <Text style={styles.inforText}>6️⃣  Stay with Them Until Help Arrives</Text>
         <View style={{justifyContent: 'center', marginTop: 16, alignItems: 'center'}}>
           <TouchableOpacity
             style={styles.callButton}
